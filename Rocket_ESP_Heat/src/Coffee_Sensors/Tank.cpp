@@ -10,28 +10,38 @@
 #include "Tank.h"
 
 uint8_t Tank::interruptPin = 0;
-volatile bool Tank::waterOK = false;
-volatile unsigned long Tank::lastInterruptTime = 0;  // Renamed for clarity
-
-void Tank::isr_water() {
-  lastInterruptTime = millis();  // Just record the interrupt time
-}
+bool Tank::currentState = HIGH;
+bool Tank::lastState = HIGH;
+unsigned long Tank::lastDebounceTime = 0;
 
 void Tank::setup(uint8_t pin) {
   interruptPin = pin;
-  pinMode(interruptPin, INPUT);
-  waterOK = (digitalRead(interruptPin) == HIGH);  // Initialize
-  attachInterrupt(digitalPinToInterrupt(interruptPin), isr_water, CHANGE);
+  pinMode(interruptPin, INPUT_PULLUP);
+  // Initialize state - HIGH means water is OK (float switch open = water present)
+  currentState = digitalRead(interruptPin);
+  lastState = currentState;
+  lastDebounceTime = 0;
 }
 
 bool Tank::WaterIsOK() {
-  // Debounce: Only update state if no interrupts for `debounceDelay`
-  if (millis() - lastInterruptTime > debounceDelay) {
-    waterOK = (digitalRead(interruptPin) == HIGH);
+  bool reading = digitalRead(interruptPin);
+  
+  // Debounce check
+  if (reading != lastState) {
+    lastDebounceTime = millis();
   }
-  return waterOK;
+  
+  if (millis() - lastDebounceTime > debounceDelay) {
+    if (reading != currentState) {
+      currentState = reading;
+    }
+  }
+  lastState = reading;
+  
+  // Water is OK when sensor reads HIGH (float switch open = water present)
+  return currentState == HIGH;
 }
 
 bool Tank::WaterIsNOK() {
-  return !WaterIsOK();  // Uses debounced state
+  return !WaterIsOK();
 }

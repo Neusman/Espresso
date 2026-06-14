@@ -15,12 +15,10 @@
 class Boiler {
   private:
     static uint8_t interruptPin;
-    static volatile bool waterOK;
-    static volatile bool waterNOK;
-    static volatile unsigned long lastInterruptTime;
-    static const unsigned long debounceDelay = 1000; // Debounce delay in ms
-
-    static void isr_water();
+    static bool currentState;
+    static bool lastState;
+    static unsigned long lastDebounceTime;
+    static const unsigned long debounceDelay = 50; // Debounce delay in ms
 
   public:
     static void setup(uint8_t pin);

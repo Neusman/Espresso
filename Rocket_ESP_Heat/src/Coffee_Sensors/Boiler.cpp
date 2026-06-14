@@ -9,28 +9,38 @@
 #include "Boiler.h"
 
 uint8_t Boiler::interruptPin = 0;
-volatile bool Boiler::waterOK = false;
-volatile unsigned long Boiler::lastInterruptTime = 0;  // Renamed for clarity
-
-void Boiler::isr_water() {
-  lastInterruptTime = millis();  // Just record the interrupt time
-}
+bool Boiler::currentState = LOW;
+bool Boiler::lastState = LOW;
+unsigned long Boiler::lastDebounceTime = 0;
 
 void Boiler::setup(uint8_t pin) {
   interruptPin = pin;
-  pinMode(interruptPin, INPUT);
-  waterOK = (digitalRead(interruptPin) == LOW);  // Initialize
-  attachInterrupt(digitalPinToInterrupt(interruptPin), isr_water, CHANGE);
+  pinMode(interruptPin, INPUT_PULLUP);
+  // Initialize state - LOW means water is OK (sensor connected to GND when water present)
+  currentState = digitalRead(interruptPin);
+  lastState = currentState;
+  lastDebounceTime = 0;
 }
 
 bool Boiler::WaterIsOK() {
-  // Debounce: Only update state if no interrupts for `debounceDelay`
-  if (millis() - lastInterruptTime > debounceDelay) {
-    waterOK = (digitalRead(interruptPin) == LOW);
+  bool reading = digitalRead(interruptPin);
+  
+  // Debounce check
+  if (reading != lastState) {
+    lastDebounceTime = millis();
   }
-  return waterOK;
+  
+  if (millis() - lastDebounceTime > debounceDelay) {
+    if (reading != currentState) {
+      currentState = reading;
+    }
+  }
+  lastState = reading;
+  
+  // Water is OK when sensor reads LOW (connected to GND through water)
+  return currentState == LOW;
 }
 
 bool Boiler::WaterIsNOK() {
-  return !WaterIsOK();  // Uses debounced state
+  return !WaterIsOK();
 }
