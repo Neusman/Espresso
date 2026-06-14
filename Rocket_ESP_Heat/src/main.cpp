@@ -180,7 +180,7 @@ void loop() {
 
     // Debug: Print temperature every 20 seconds
     static unsigned long lastTempPrint = 0;
-    if (millis() - lastTempPrint > 20000) {
+    if (millis() - lastTempPrint > 10000) {
         lastTempPrint = millis();
         Serial.printf("Current Temp: %.2f°C\n", tempSens.readTemperatureC());
     }
