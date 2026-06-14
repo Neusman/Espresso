@@ -18,7 +18,7 @@ class Boiler {
     static bool currentState;
     static bool lastState;
     static unsigned long lastDebounceTime;
-    static const unsigned long debounceDelay = 50; // Debounce delay in ms
+    static const unsigned long debounceDelay = 1000; // Debounce delay in ms
 
   public:
     static void setup(uint8_t pin);
