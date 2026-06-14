@@ -178,9 +178,9 @@ void loop() {
     // Blink LED if tank water is NOK
     coffee.WaterLevel_LED(Tank::WaterIsNOK());
 
-    // Debug: Print temperature every 5 seconds
+    // Debug: Print temperature every 20 seconds
     static unsigned long lastTempPrint = 0;
-    if (millis() - lastTempPrint > 10000) {
+    if (millis() - lastTempPrint > 20000) {
         lastTempPrint = millis();
         Serial.printf("Current Temp: %.2f°C\n", tempSens.readTemperatureC());
     }
