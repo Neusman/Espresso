@@ -27,7 +27,7 @@ Preferences preferences;
 // Heater Configuration
 #define HEATER_PIN 15
 #define AUTOTUNE_SWITCH_PIN 27
-#define HEATER_WATTAGE 1100
+#define HEATER_WATTAGE 1350
 #define DEFAULT_SETPOINT 125.0
 
 Heater heater(&tempSensor, HEATER_PIN, onHeaterError, onPidUpdate, onAutotuneFail);
