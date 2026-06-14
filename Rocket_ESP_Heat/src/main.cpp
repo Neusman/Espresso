@@ -109,6 +109,7 @@ void setup() {
     preferences.end();
     
     Serial.printf("Loaded PID gains: Kp=%.2f, Ki=%.2f, Kd=%.2f, Kff=%.2f\n", Kp, Ki, Kd, Kff);
+    delay(delay_init);
 
     // Setup autotune switch pin
     heater.setAutotuneSwitchPin(AUTOTUNE_SWITCH_PIN);
