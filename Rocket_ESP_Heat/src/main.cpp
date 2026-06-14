@@ -94,7 +94,14 @@ void setup() {
 
 
     // Initialize heater with NVS-loaded gains
+    if (!preferences.begin("heater", true)) {
+    Serial.println("Formatting NVS for first use...");
+    preferences.begin("heater", false);  // false = read-write mode
+    // This will create the namespace
+    preferences.end();
+    // Now try again
     preferences.begin("heater", true);
+    }
     float Kp = preferences.getFloat("Kp", 100.0);
     float Ki = preferences.getFloat("Ki", 10.0);
     float Kd = preferences.getFloat("Kd", 1.0);
