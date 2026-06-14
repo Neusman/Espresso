@@ -9,43 +9,77 @@
 #include "LeverInterrupt.h"
 
 uint8_t LeverInterrupt::interruptPin = 0; // Default, will be set in setup()
-volatile bool LeverInterrupt::risingTriggered = false;
-volatile bool LeverInterrupt::fallingTriggered = false;
-volatile unsigned long LeverInterrupt::lastDebounceTime;
+bool LeverInterrupt::currentState = HIGH;
+bool LeverInterrupt::lastState = HIGH;
+unsigned long LeverInterrupt::lastDebounceTime = 0;
 
-void LeverInterrupt::isr_lever() {
-   unsigned long currentTime = millis();
-
-    // Debounce: ignore if the interrupt was triggered too soon after the last one
-    if (currentTime - lastDebounceTime > debounceDelay) {
-    lastDebounceTime = currentTime;
-
-      // Determine if the interrupt was triggered by a rising or falling edge
-      if (digitalRead(interruptPin) == HIGH) {
-        risingTriggered = true;
-        fallingTriggered = false;  // Clear the other flag
-      } else {
-        fallingTriggered = true;
-        risingTriggered = false;  // Clear the other flag
-      }
-  }
-}
-
-void LeverInterrupt::setup(uint8_t pin,uint8_t mode) {
+void LeverInterrupt::setup(uint8_t pin, uint8_t mode) {
   interruptPin = pin;
-  pinMode(interruptPin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(interruptPin), isr_lever, mode);
+  pinMode(interruptPin, mode);
+  // Initialize state
+  currentState = digitalRead(interruptPin);
+  lastState = currentState;
   lastDebounceTime = 0;
 }
 
 bool LeverInterrupt::checkTriggeredRising() {
-  bool triggered = risingTriggered;
-  risingTriggered = false;
-  return triggered;
+  bool reading = digitalRead(interruptPin);
+  
+  // Debounce check
+  if (reading != lastState) {
+    lastDebounceTime = millis();
+  }
+  
+  if (millis() - lastDebounceTime > debounceDelay) {
+    if (reading != currentState) {
+      currentState = reading;
+      lastState = reading;
+      // Rising edge: was LOW, now HIGH
+      return (currentState == HIGH);
+    }
+  }
+  lastState = reading;
+  return false;
 }
 
 bool LeverInterrupt::checkTriggeredFalling() {
-  bool triggered = fallingTriggered;
-  fallingTriggered = false;
-  return triggered;
+  bool reading = digitalRead(interruptPin);
+  
+  // Debounce check
+  if (reading != lastState) {
+    lastDebounceTime = millis();
+  }
+  
+  if (millis() - lastDebounceTime > debounceDelay) {
+    if (reading != currentState) {
+      currentState = reading;
+      lastState = reading;
+      // Falling edge: was HIGH, now LOW
+      return (currentState == LOW);
+    }
+  }
+  lastState = reading;
+  return false;
+}
+
+bool LeverInterrupt::isLeverUp() {
+  bool reading = digitalRead(interruptPin);
+  
+  // Debounce check
+  if (reading != lastState) {
+    lastDebounceTime = millis();
+  }
+  
+  if (millis() - lastDebounceTime > debounceDelay) {
+    if (reading != currentState) {
+      currentState = reading;
+    }
+  }
+  lastState = reading;
+  
+  return currentState == HIGH;
+}
+
+bool LeverInterrupt::isLeverDown() {
+  return !isLeverUp();
 }

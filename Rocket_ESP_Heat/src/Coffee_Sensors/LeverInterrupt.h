@@ -15,17 +15,17 @@
 class LeverInterrupt {
   private:
     static uint8_t interruptPin;
-    static volatile bool risingTriggered;
-    static volatile bool fallingTriggered;
-    static volatile unsigned long lastDebounceTime;
+    static bool currentState;
+    static bool lastState;
+    static unsigned long lastDebounceTime;
     static const unsigned long debounceDelay = 50; // Debounce delay in ms
 
-    static void isr_lever();
-
   public:
-    static void setup(uint8_t pin,uint8_t mode = HIGH);
+    static void setup(uint8_t pin, uint8_t mode = INPUT_PULLUP);
     static bool checkTriggeredRising();
     static bool checkTriggeredFalling();
+    static bool isLeverUp();
+    static bool isLeverDown();
 };
 
 

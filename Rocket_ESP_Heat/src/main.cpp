@@ -70,7 +70,7 @@ void setup() {
     Wire.begin(21, 22);
 
     // Initialize sensors
-    LeverInterrupt::setup(17, CHANGE);
+    LeverInterrupt::setup(17);
     Tank::setup(36);
     Boiler::setup(39);
     const uint8_t Sleep_pin = 15;
