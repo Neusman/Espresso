@@ -37,6 +37,10 @@ public:
     float getSetpoint() { return setpoint; };
     void setTunings(float Kp, float Ki, float Kd);
     void autotune(int testTimeSec, int windowSize, int heaterWattage);
+    
+    // Autotune trigger with debounce
+    void setAutotuneSwitchPin(uint8_t pin);
+    bool checkAutotuneTrigger(int testTimeSec, int windowSize, int heaterWattage);
 
     // Thermal feedforward control
     void setThermalFeedforward(float *pumpFlowPtr = nullptr, float incomingWaterTemp = 23.0f, int *valveStatusPtr = nullptr);
@@ -77,6 +81,12 @@ private:
     bool startup = true;
     bool autotuning = false;
     int autotuneHeaterWattage = 0;
+    
+    // Autotune trigger debounce variables
+    uint8_t autotuneSwitchPin = 255; // Invalid pin by default
+    unsigned long lastAutotuneDebounceTime = 0;
+    bool lastAutotuneTriggered = false;
+    static constexpr unsigned long autotuneDebounceDelay = 1000; // 1 second debounce
 
     // Thermal feedforward variables
     float *pumpFlowRate = nullptr;

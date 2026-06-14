@@ -88,6 +88,35 @@ void Heater::autotune(int testTimeSec, int windowSize, int heaterWattage) {
     autotuning = true;
 }
 
+void Heater::setAutotuneSwitchPin(uint8_t pin) {
+    autotuneSwitchPin = pin;
+    if (pin < 40) { // Valid GPIO pin
+        pinMode(pin, INPUT_PULLUP);
+    }
+}
+
+bool Heater::checkAutotuneTrigger(int testTimeSec, int windowSize, int heaterWattage) {
+    if (autotuneSwitchPin >= 40) {
+        return false; // Invalid pin, not configured
+    }
+    
+    uint8_t switchReading = digitalRead(autotuneSwitchPin);
+    
+    if (switchReading == LOW && !lastAutotuneTriggered) {
+        // Check if enough time has passed since last trigger
+        if (millis() - lastAutotuneDebounceTime > autotuneDebounceDelay) {
+            lastAutotuneTriggered = true;
+            lastAutotuneDebounceTime = millis();
+            autotune(testTimeSec, windowSize, heaterWattage);
+            return true;
+        }
+    } else if (switchReading == HIGH) {
+        lastAutotuneTriggered = false;
+    }
+    
+    return false;
+}
+
 void Heater::loopPid() {
     softPwm(TUNER_OUTPUT_SPAN);
     temperature = sensor->read();

@@ -101,6 +101,8 @@ void setup() {
     float Kff = preferences.getFloat("Kff", 0.5);
     preferences.end();
 
+    // Setup autotune switch pin
+    heater.setAutotuneSwitchPin(AUTOTUNE_SWITCH_PIN);
 
     heater.setup();
     heater.setTunings(Kp, Ki, Kd);
@@ -114,24 +116,10 @@ void setup() {
 }
 
 void loop() {
-
-    // Autotune Trigger (Internal Switch on GPIO 0) with 1-second debounce
-    static bool autotuneTriggered = false;
-    static unsigned long lastDebounceTime = 0;
-    static const unsigned long debounceDelay = 1000; // 1 second debounce
-    
-    uint8_t switchReading = digitalRead(AUTOTUNE_SWITCH_PIN);
-    if (switchReading == LOW && !autotuneTriggered) {
-        // Check if enough time has passed since last trigger
-        if (millis() - lastDebounceTime > debounceDelay) {
-            autotuneTriggered = true;
-            lastDebounceTime = millis();
-            Serial.println("Starting Autotune...");
-            heater.autotune(120, 6, HEATER_WATTAGE);
-            delay(1000);
-        }
-    } else if (switchReading == HIGH) {
-        autotuneTriggered = false;
+    // Check autotune trigger (with internal 1-second debounce)
+    if (heater.checkAutotuneTrigger(120, 6, HEATER_WATTAGE)) {
+        Serial.println("Starting Autotune...");
+        delay(1000);
     }
 
     // Heater PID control
