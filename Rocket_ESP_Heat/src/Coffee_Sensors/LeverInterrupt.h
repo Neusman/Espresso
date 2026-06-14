@@ -19,9 +19,14 @@ class LeverInterrupt {
     static bool lastState;
     static unsigned long lastDebounceTime;
     static const unsigned long debounceDelay = 50; // Debounce delay in ms
+    
+    // For edge detection
+    static bool lastRisingEdge;
+    static bool lastFallingEdge;
 
   public:
     static void setup(uint8_t pin, uint8_t mode = INPUT_PULLUP);
+    static void update(); // Call this to update internal state with debounce
     static bool checkTriggeredRising();
     static bool checkTriggeredFalling();
     static bool isLeverUp();

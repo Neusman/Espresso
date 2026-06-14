@@ -8,78 +8,74 @@
 
 #include "LeverInterrupt.h"
 
-uint8_t LeverInterrupt::interruptPin = 0; // Default, will be set in setup()
+uint8_t LeverInterrupt::interruptPin = 0;
 bool LeverInterrupt::currentState = HIGH;
 bool LeverInterrupt::lastState = HIGH;
 unsigned long LeverInterrupt::lastDebounceTime = 0;
+bool LeverInterrupt::lastRisingEdge = false;
+bool LeverInterrupt::lastFallingEdge = false;
 
 void LeverInterrupt::setup(uint8_t pin, uint8_t mode) {
   interruptPin = pin;
   pinMode(interruptPin, mode);
-  // Initialize state
   currentState = digitalRead(interruptPin);
   lastState = currentState;
   lastDebounceTime = 0;
+  lastRisingEdge = false;
+  lastFallingEdge = false;
 }
 
-bool LeverInterrupt::checkTriggeredRising() {
+void LeverInterrupt::update() {
   bool reading = digitalRead(interruptPin);
   
-  // Debounce check
+  // If the input changed due to noise or pressing
   if (reading != lastState) {
     lastDebounceTime = millis();
   }
   
+  // Whatever the reading is at, it's been there for longer than the debounce delay
   if (millis() - lastDebounceTime > debounceDelay) {
+    // If the button state has changed
     if (reading != currentState) {
+      bool wasLow = (currentState == LOW);
       currentState = reading;
-      lastState = reading;
-      // Rising edge: was LOW, now HIGH
-      return (currentState == HIGH);
+      
+      // Detect edges
+      if (currentState == HIGH && wasLow) {
+        lastRisingEdge = true;
+      } else if (currentState == LOW && !wasLow) {
+        lastFallingEdge = true;
+      }
     }
   }
+  
   lastState = reading;
+}
+
+bool LeverInterrupt::checkTriggeredRising() {
+  update();
+  if (lastRisingEdge) {
+    lastRisingEdge = false;
+    return true;
+  }
   return false;
 }
 
 bool LeverInterrupt::checkTriggeredFalling() {
-  bool reading = digitalRead(interruptPin);
-  
-  // Debounce check
-  if (reading != lastState) {
-    lastDebounceTime = millis();
+  update();
+  if (lastFallingEdge) {
+    lastFallingEdge = false;
+    return true;
   }
-  
-  if (millis() - lastDebounceTime > debounceDelay) {
-    if (reading != currentState) {
-      currentState = reading;
-      lastState = reading;
-      // Falling edge: was HIGH, now LOW
-      return (currentState == LOW);
-    }
-  }
-  lastState = reading;
   return false;
 }
 
 bool LeverInterrupt::isLeverUp() {
-  bool reading = digitalRead(interruptPin);
-  
-  // Debounce check
-  if (reading != lastState) {
-    lastDebounceTime = millis();
-  }
-  
-  if (millis() - lastDebounceTime > debounceDelay) {
-    if (reading != currentState) {
-      currentState = reading;
-    }
-  }
-  lastState = reading;
-  
+  update();
   return currentState == HIGH;
 }
 
 bool LeverInterrupt::isLeverDown() {
-  return !isLeverUp();
+  update();
+  return currentState == LOW;
 }
