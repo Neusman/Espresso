@@ -18,7 +18,7 @@ class LeverInterrupt {
     static volatile bool risingTriggered;
     static volatile bool fallingTriggered;
     static volatile unsigned long lastDebounceTime;
-    static const unsigned long debounceDelay = 200; // Debounce delay in ms
+    static const unsigned long debounceDelay = 50; // Debounce delay in ms
 
     static void isr_lever();
 
